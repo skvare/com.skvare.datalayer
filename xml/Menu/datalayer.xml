@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<menu>
+
+  <!--
+    Global settings page
+    URL: civicrm/admin/datalayer
+    Also reachable from Administer > System Settings > DataLayer Settings
+  -->
+  <item>
+    <path>civicrm/admin/datalayer</path>
+    <page_callback>CRM_Datalayer_Form_Admin_GlobalSettings</page_callback>
+    <title>DataLayer Settings</title>
+    <desc>Configure global GA4 dataLayer tracking: master switch, entity-type controls, event toggles, and behaviour options.</desc>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <is_public>0</is_public>
+  </item>
+
+  <!--
+    Contribution page management tab
+    URL: civicrm/admin/contribute/datalayer?action=update&reset=1&id=N
+  -->
+  <item>
+    <path>civicrm/admin/contribute/datalayer</path>
+    <page_callback>CRM_Datalayer_Form_ContributionPage_DataLayer</page_callback>
+    <title>DataLayer</title>
+    <desc>Override DataLayer tracking options for this contribution page.</desc>
+    <access_arguments>edit all events</access_arguments>
+    <is_public>0</is_public>
+  </item>
+
+  <!--
+    Event management tab
+    URL: civicrm/event/manage/datalayer?reset=1&action=update&component=event&id=N
+  -->
+  <item>
+    <path>civicrm/event/manage/datalayer</path>
+    <page_callback>CRM_Datalayer_Form_ManageEvent_DataLayer</page_callback>
+    <title>DataLayer</title>
+    <desc>Override DataLayer tracking options for this event.</desc>
+    <access_arguments>edit all events</access_arguments>
+    <is_public>0</is_public>
+  </item>
+
+</menu>
