@@ -26,6 +26,10 @@ class CRM_Datalayer_Form_ManageEvent_DataLayer extends CRM_Event_Form_ManageEven
     parent::preProcess();
   }
 
+  public function getTemplateFileName(): string {
+    return 'CRM/Datalayer/Form/Admin/EntitySettings.tpl';
+  }
+
   public function buildQuickForm(): void {
     CRM_Datalayer_Form_Admin_EntitySettings::addEntityFields($this, $this->_entityType);
 

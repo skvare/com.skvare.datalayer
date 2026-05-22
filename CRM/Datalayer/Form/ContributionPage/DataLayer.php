@@ -24,10 +24,10 @@ class CRM_Datalayer_Form_ContributionPage_DataLayer extends CRM_Contribute_Form_
 
   public function preProcess() {
     parent::preProcess();
-    CRM_Core_Error::debug_var('EntitySettings preProcess', [
-      'entityType' => $this->_entityType,
-      'entityId' => $this->_id,
-    ]);
+  }
+
+  public function getTemplateFileName(): string {
+    return 'CRM/Datalayer/Form/Admin/EntitySettings.tpl';
   }
 
   public function buildQuickForm(): void {

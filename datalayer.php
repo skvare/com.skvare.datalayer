@@ -6,7 +6,7 @@ require_once 'datalayer.civix.php';
  * Hook dispatch overview
  * ──────────────────────
  *  hook_civicrm_config          → register autoloader + Smarty template dir
- *  hook_civicrm_install         → seed default settings
+ *  hook_civicrm_enable          → seed default settings
  *  hook_civicrm_navigationMenu  → add admin link under System Settings
  *
  *  hook_civicrm_pageRun         → CRM_Event_Page_EventInfo (view_item)
@@ -88,6 +88,12 @@ function datalayer_civicrm_navigationMenu(array &$menu) {
  * @param array  $context
  */
 function datalayer_civicrm_tabset($tabsetName, &$tabs, $context): void {
+  // Hide tabs entirely when the global master switch is off — per-entity settings
+  // have no effect while the master is disabled, so there is nothing to configure.
+  if (!Civi::settings()->get('datalayer_enabled')) {
+    return;
+  }
+
   if ($tabsetName === 'civicrm/admin/contribute' && !empty($context['contribution_page_id'])) {
     $id = (int) ($context['contribution_page_id'] ?? 0);
     if ($id > 0) {
@@ -97,6 +103,7 @@ function datalayer_civicrm_tabset($tabsetName, &$tabs, $context): void {
         'valid' => TRUE,
         'active' => TRUE,
         'current' => FALSE,
+        'icon' => 'crm-i fa-layer-group',
       ];
     }
   }
@@ -110,6 +117,7 @@ function datalayer_civicrm_tabset($tabsetName, &$tabs, $context): void {
         'valid' => TRUE,
         'active' => TRUE,
         'current' => FALSE,
+        'icon' => 'crm-i fa-layer-group',
       ];
     }
   }

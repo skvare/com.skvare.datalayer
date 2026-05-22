@@ -19,17 +19,23 @@
 
   {* ── Entity-Type Controls ────────────────────────────────────────────── *}
   <h3>{ts}Entity-Type Controls{/ts}</h3>
-  <div class="help">{ts}Enable or disable dataLayer tracking for entire entity types. Individual contribution pages and events can still override these below.{/ts}</div>
+  <div class="help">{ts}Enable or disable dataLayer tracking for entire entity types. Individual contribution pages and events can still override these via their own <strong>DataLayer</strong> tab.{/ts}</div>
 
   <div class="crm-section">
     <div class="label">{$form.datalayer_enable_contributions.label}</div>
-    <div class="content">{$form.datalayer_enable_contributions.html}</div>
+    <div class="content">
+      {$form.datalayer_enable_contributions.html}
+      <span class="description">{ts}When unchecked, all dataLayer pushes for every Contribution Page are suppressed. When enabled, Individual pages can still override this via their own DataLayer tab.{/ts}</span>
+    </div>
     <div class="clear"></div>
   </div>
 
   <div class="crm-section">
     <div class="label">{$form.datalayer_enable_events.label}</div>
-    <div class="content">{$form.datalayer_enable_events.html}</div>
+    <div class="content">
+      {$form.datalayer_enable_events.html}
+      <span class="description">{ts}When unchecked, all dataLayer pushes for every Event Registration are suppressed. When enabled, Individual events can still override this via their own DataLayer tab.{/ts}</span>
+    </div>
     <div class="clear"></div>
   </div>
 

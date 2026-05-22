@@ -1,1 +1,0 @@
-{include 'CRM/Datalayer/Form/Admin/EntitySettings.tpl'}

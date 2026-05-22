@@ -5,16 +5,16 @@ use CRM_Datalayer_ExtensionUtil as E;
 /**
  * Per-entity DataLayer settings.
  *
- * Works in two modes:
+ * Static helper used by the two per-entity tab form classes:
  *
- *  1. Standalone page — civicrm/admin/datalayer/entity?type=contribution_page&id=N
- *     or                civicrm/admin/datalayer/entity?type=event&id=N
+ *  - CRM_Datalayer_Form_ContributionPage_DataLayer
+ *    (tab: civicrm/admin/contribute/datalayer?action=update&reset=1&id=N)
  *
- *  2. Inline injection — called from datalayer_civicrm_buildForm and
- *     datalayer_civicrm_postProcess to append a collapsible "DataLayer Settings"
- *     section to the existing CiviCRM admin forms:
- *       CRM_Contribute_Form_ContributionPage_Settings
- *       CRM_Event_Form_ManageEvent_EventInfo
+ *  - CRM_Datalayer_Form_ManageEvent_DataLayer
+ *    (tab: civicrm/event/manage/datalayer?reset=1&action=update&component=event&id=N)
+ *
+ * Provides shared field-building, default-loading, and value-mapping logic
+ * so both form classes stay thin.
  *
  * ── Control levels exposed ───────────────────────────────────────────────────
  *
