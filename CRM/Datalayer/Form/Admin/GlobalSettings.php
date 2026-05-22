@@ -38,22 +38,22 @@ class CRM_Datalayer_Form_Admin_GlobalSettings extends CRM_Core_Form {
 
     // ── Entity-type controls ──────────────────────────────────────────────
     $this->add('checkbox', 'datalayer_enable_contributions', E::ts('Enable for Contribution Pages'));
-    $this->add('checkbox', 'datalayer_enable_events',        E::ts('Enable for Event Registrations'));
-    $this->add('checkbox', 'datalayer_enable_event_info',    E::ts('Enable for Event Info Pages'));
+    $this->add('checkbox', 'datalayer_enable_events', E::ts('Enable for Event Registrations'));
+    $this->add('checkbox', 'datalayer_enable_event_info', E::ts('Enable for Event Info Pages'));
 
     // ── Feature toggles ───────────────────────────────────────────────────
-    $this->add('checkbox', 'datalayer_track_view_item',         E::ts('Push civicrm_view_item events'));
-    $this->add('checkbox', 'datalayer_track_begin_checkout',    E::ts('Push civicrm_begin_checkout events'));
-    $this->add('checkbox', 'datalayer_track_purchase',          E::ts('Push civicrm_purchase events'));
+    $this->add('checkbox', 'datalayer_track_view_item', E::ts('Push civicrm_view_item events'));
+    $this->add('checkbox', 'datalayer_track_begin_checkout', E::ts('Push civicrm_begin_checkout events'));
+    $this->add('checkbox', 'datalayer_track_purchase', E::ts('Push civicrm_purchase events'));
     $this->add('checkbox', 'datalayer_track_registration_step', E::ts('Push civicrm_registration_step events (additional participants)'));
 
     // ── Behavior ──────────────────────────────────────────────────────────
     $this->add('checkbox', 'datalayer_exclude_test', E::ts('Exclude test transactions from all pushes'));
-    $this->add('checkbox', 'datalayer_debug_mode',   E::ts('Debug mode (console.log each push)'));
+    $this->add('checkbox', 'datalayer_debug_mode', E::ts('Debug mode (console.log each push)'));
     $this->add('text', 'datalayer_variable_name', E::ts('JS variable name'), [
-      'class'     => 'crm-form-text',
+      'class' => 'crm-form-text',
       'maxlength' => '64',
-      'size'      => '30',
+      'size' => '30',
     ]);
     $this->addRule('datalayer_variable_name', E::ts('Must be a valid JavaScript identifier.'), 'regex', '/^[a-zA-Z_$][a-zA-Z0-9_$]*$/');
 

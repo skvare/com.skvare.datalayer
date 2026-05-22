@@ -19,8 +19,8 @@
  */
 class CRM_Datalayer_Helper_Push {
 
-  private static array $campaignCache      = [];
-  private static array $eventTypeCache     = [];
+  private static array $campaignCache = [];
+  private static array $eventTypeCache = [];
   private static array $financialTypeCache = [];
 
   // ── Injection ─────────────────────────────────────────────────────────────
@@ -31,7 +31,7 @@ class CRM_Datalayer_Helper_Push {
    * @param array $payload The complete GA4 payload to push.
    */
   public static function injectPush(array $payload): void {
-    $var  = CRM_Datalayer_Helper_EntitySettings::getVariableName();
+    $var = CRM_Datalayer_Helper_EntitySettings::getVariableName();
     $json = json_encode(
       $payload,
       JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
@@ -69,8 +69,8 @@ JS;
     try {
       $result = civicrm_api4('Campaign', 'get', [
         'select' => ['title'],
-        'where'  => [['id', '=', $campaignId]],
-        'limit'  => 1,
+        'where' => [['id', '=', $campaignId]],
+        'limit' => 1,
       ]);
       self::$campaignCache[$campaignId] = $result->first()['title'] ?? NULL;
     }
@@ -97,11 +97,11 @@ JS;
     try {
       $result = civicrm_api4('OptionValue', 'get', [
         'select' => ['label'],
-        'where'  => [
+        'where' => [
           ['option_group_id:name', '=', 'event_type'],
           ['value', '=', (string) $eventTypeId],
         ],
-        'limit'  => 1,
+        'limit' => 1,
       ]);
       self::$eventTypeCache[$eventTypeId] = $result->first()['label'] ?? NULL;
     }
@@ -128,8 +128,8 @@ JS;
     try {
       $result = civicrm_api4('FinancialType', 'get', [
         'select' => ['name'],
-        'where'  => [['id', '=', $financialTypeId]],
-        'limit'  => 1,
+        'where' => [['id', '=', $financialTypeId]],
+        'limit' => 1,
       ]);
       self::$financialTypeCache[$financialTypeId] = $result->first()['name'] ?? NULL;
     }
@@ -152,16 +152,16 @@ JS;
       return [];
     }
     try {
-      $rows   = civicrm_api4('LineItem', 'get', [
+      $rows = civicrm_api4('LineItem', 'get', [
         'select' => ['label', 'unit_price', 'qty'],
-        'where'  => [['contribution_id', '=', $contributionId]],
+        'where' => [['contribution_id', '=', $contributionId]],
       ]);
       $result = [];
       foreach ($rows as $row) {
         $result[] = [
           'item_name' => $row['label'] ?? '',
-          'price'     => (float) ($row['unit_price'] ?? 0),
-          'quantity'  => (int)   ($row['qty']        ?? 1),
+          'price' => (float) ($row['unit_price'] ?? 0),
+          'quantity' => (int) ($row['qty'] ?? 1),
         ];
       }
       return $result;
