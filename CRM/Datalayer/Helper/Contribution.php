@@ -182,9 +182,27 @@ class CRM_Datalayer_Helper_Contribution {
     }
 
     $v = $form->_values ?? [];
-    $contributionId = (int) ($form->_contributionID ?? 0);
-    $contribution = $this->fetchContribution($contributionId);
+    $session = CRM_Core_Session::singleton();
+    $contributionId = (int) ($session->get('_contributionID') ?? 0);
+    $currency = $form->_values['currency'];
 
+    // update based on user selection
+    $params = $form->getVar('_params');
+
+    if (!empty($params)) {
+      $amount = $form->getVar('_amount');
+      if (!empty($params['amount'])) {
+        $amount = $params['amount'];
+      }
+    }
+
+    $contribution = [];
+    if ($contributionId) {
+      $contribution = $this->fetchContribution($contributionId);
+    }
+    elseif ($form->getVar('_trxnId')) {
+      $contribution = $this->fetchContributionWithTrnx($form->getVar('_trxnId'));
+    }
     // Re-verify is_test from authoritative DB record
     $isTestDb = !empty($contribution['is_test']);
     if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('contribution', $pageId, 'track_purchase', $isTestDb)) {
@@ -230,7 +248,7 @@ class CRM_Datalayer_Helper_Contribution {
         ],
         'ecommerce' => [
           'currency' => $currency,
-          'value' => $totalAmount,
+          'value' => $totalAmount ?? $amount,
           'items' => $lineItems,
         ],
       ],
@@ -282,7 +300,7 @@ class CRM_Datalayer_Helper_Contribution {
         'select' => [
           'id', 'total_amount', 'currency', 'is_test', 'campaign_id',
           'financial_type_id', 'contribution_recur_id',
-          'frequency_unit', 'frequency_interval', 'installments',
+          'frequency_unit', 'frequency_interval', 'installments', 'is_pay_later',
         ],
         'where' => [['id', '=', $contributionId]],
         'limit' => 1,
@@ -291,6 +309,31 @@ class CRM_Datalayer_Helper_Contribution {
     }
     catch (Exception $e) {
       Civi::log()->warning("DataLayer: contribution fetch failed (id={$contributionId}): " . $e->getMessage());
+      return [];
+    }
+  }
+
+  /**
+   * Fetch a Contribution record from the database via APIv4.
+   */
+  private function fetchContributionWithTrnx(string $tranID): array {
+    if (empty($tranID)) {
+      return [];
+    }
+    try {
+      $result = civicrm_api4('Contribution', 'get', [
+        'select' => [
+          'id', 'total_amount', 'currency', 'is_test', 'campaign_id',
+          'financial_type_id', 'contribution_recur_id',
+          'frequency_unit', 'frequency_interval', 'installments', 'is_pay_later',
+        ],
+        'where' => [['trxn_id', '=', $tranID]],
+        'limit' => 1,
+      ]);
+      return $result->first() ?? [];
+    }
+    catch (Exception $e) {
+      Civi::log()->warning("DataLayer: contribution fetch failed (trxn_id={$tranID}): " . $e->getMessage());
       return [];
     }
   }

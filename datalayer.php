@@ -266,6 +266,13 @@ function datalayer_civicrm_buildForm(string $formName, &$form): void {
 function datalayer_civicrm_postProcess(string $formName, CRM_Core_Form &$form) {
   switch ($formName) {
 
+    case 'CRM_Contribute_Form_Contribution_Confirm':
+      if ($form->getContributionID()) {
+        $session = CRM_Core_Session::singleton();
+        $session->set('_contributionID', $form->getContributionID());
+      }
+      break;
+
     // ── Contribution_Main (no-confirm path) ────────────────────────────
     // When is_confirm_enabled is false the ThankYou page follows Main
     // directly; push begin_checkout here (the user has committed to pay).

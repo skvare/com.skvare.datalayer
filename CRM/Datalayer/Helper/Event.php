@@ -304,7 +304,7 @@ class CRM_Datalayer_Helper_Event {
       return NULL;
     }
 
-    $contributionId = (int) ($form->_params[0]['contributionID'] ?? 0);
+    $contributionId = (int) ($form->_values['contributionId'] ?? 0);
     $contribution = $this->fetchContribution($contributionId);
 
     // Re-verify is_test from authoritative DB record
