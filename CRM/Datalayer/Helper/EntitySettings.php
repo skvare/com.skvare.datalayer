@@ -36,6 +36,7 @@ class CRM_Datalayer_Helper_EntitySettings {
   const KEY_EXCLUDE_TEST         = 'datalayer_exclude_test';
   const KEY_VARIABLE_NAME        = 'datalayer_variable_name';
   const KEY_DEBUG_MODE           = 'datalayer_debug_mode';
+  const KEY_GTM_ID               = 'datalayer_gtm_id';
 
   // ── Per-entity feature keys (values: 'inherit' | 'enabled' | 'disabled') ──
 
@@ -61,6 +62,7 @@ class CRM_Datalayer_Helper_EntitySettings {
       self::KEY_EXCLUDE_TEST         => FALSE,
       self::KEY_VARIABLE_NAME        => 'dataLayer',
       self::KEY_DEBUG_MODE           => FALSE,
+      self::KEY_GTM_ID               => '',
     ];
   }
 

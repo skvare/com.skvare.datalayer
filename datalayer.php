@@ -133,6 +133,10 @@ function datalayer_civicrm_pageRun(&$page): void {
   if (get_class($page) !== 'CRM_Event_Page_EventInfo') {
     return;
   }
+  $gtmId = Civi::settings()->get('datalayer_gtm_id');
+  if ($gtmId) {
+    CRM_Datalayer_Helper_Push::embedGTMCode($gtmId);
+  }
   try {
     $helper = new CRM_Datalayer_Helper_Event();
     $payload = $helper->getInfoPageViewData($page);
@@ -153,6 +157,22 @@ function datalayer_civicrm_pageRun(&$page): void {
  * @param CRM_Core_Form $form
  */
 function datalayer_civicrm_buildForm(string $formName, &$form): void {
+  static $gtmPublicForms = [
+    'CRM_Contribute_Form_Contribution_Main',
+    'CRM_Contribute_Form_Contribution_Confirm',
+    'CRM_Contribute_Form_Contribution_ThankYou',
+    'CRM_Event_Form_Registration_Register',
+    'CRM_Event_Form_Registration_AdditionalParticipant',
+    'CRM_Event_Form_Registration_Confirm',
+    'CRM_Event_Form_Registration_ThankYou',
+  ];
+  if (in_array($formName, $gtmPublicForms)) {
+    $gtmId = Civi::settings()->get('datalayer_gtm_id');
+    if ($gtmId) {
+      CRM_Datalayer_Helper_Push::embedGTMCode($gtmId);
+    }
+  }
+
   switch ($formName) {
 
     // ── Contribution: view_item on landing ─────────────────────────────

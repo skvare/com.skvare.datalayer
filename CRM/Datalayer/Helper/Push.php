@@ -51,6 +51,50 @@ JS;
     CRM_Core_Region::instance('page-footer')->add(['script' => $js]);
   }
 
+  // ── GTM snippet injection ─────────────────────────────────────────────────
+
+  /**
+   * Inject the Google Tag Manager header + noscript body snippets.
+   *
+   * Safe to call multiple times — injects only once per page request.
+   * Uses the configured JS variable name so custom dataLayer names work correctly.
+   *
+   * @param string $gtmCode  GTM container ID, e.g. GTM-XXXXXXX.
+   */
+  public static function embedGTMCode(string $gtmCode): void {
+    static $injected = FALSE;
+    if ($injected) {
+      return;
+    }
+    $injected = TRUE;
+
+    $var     = CRM_Datalayer_Helper_EntitySettings::getVariableName();
+    $gtmCode = htmlspecialchars($gtmCode, ENT_QUOTES, 'UTF-8');
+
+    $headerSnippet = "
+<script>
+window['{$var}'] = window['{$var}'] || [];
+</script>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','{$var}','{$gtmCode}');</script>
+<!-- End Google Tag Manager -->
+";
+
+    $bodySnippet = "
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src=\"https://www.googletagmanager.com/ns.html?id={$gtmCode}\"
+height=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+";
+
+    CRM_Core_Region::instance('html-header')->add(['markup' => $headerSnippet]);
+    CRM_Core_Region::instance('page-body')->add(['markup' => $bodySnippet]);
+  }
+
   // ── Static-cached APIv4 lookups ───────────────────────────────────────────
 
   /**

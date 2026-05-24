@@ -162,4 +162,17 @@ return [
     'html_type' => 'checkbox',
   ],
 
+  'datalayer_gtm_id' => [
+    'group_name' => 'DataLayer Settings',
+    'group' => 'datalayer',
+    'name' => 'datalayer_gtm_id',
+    'type' => 'String',
+    'default' => '',
+    'add' => '6.4',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => 'Google Tag Manager container ID (e.g. GTM-XXXXXXX). When set, the GTM snippet is injected on all tracked CiviCRM pages.',
+    'html_type' => 'text',
+  ],
+
 ];

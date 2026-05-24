@@ -88,6 +88,18 @@
     <div class="clear"></div>
   </div>
 
+  {* ── Google Tag Manager ─────────────────────────────────────────────── *}
+  <h3>{ts}Google Tag Manager{/ts}</h3>
+
+  <div class="crm-section">
+    <div class="label">{$form.datalayer_gtm_id.label}</div>
+    <div class="content">
+      {$form.datalayer_gtm_id.html}
+      <span class="description">{ts}Your GTM container ID in the format <code>GTM-XXXXXXX</code>. When set, the GTM header and noscript snippets are automatically injected on all tracked Contribution Page and Event Registration pages. Leave blank to manage GTM placement yourself.{/ts}</span>
+    </div>
+    <div class="clear"></div>
+  </div>
+
   {* ── Behavior ────────────────────────────────────────────────────────── *}
   <h3>{ts}Behavior Settings{/ts}</h3>
 

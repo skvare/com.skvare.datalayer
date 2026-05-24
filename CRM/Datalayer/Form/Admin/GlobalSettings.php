@@ -23,6 +23,9 @@ use CRM_Datalayer_ExtensionUtil as E;
  *    • datalayer_track_purchase
  *    • datalayer_track_registration_step
  *
+ *  Google Tag Manager
+ *    • datalayer_gtm_id        — GTM container ID (e.g. GTM-XXXXXXX)
+ *
  *  Behavior
  *    • datalayer_exclude_test  — suppress pushes on test transactions globally
  *    • datalayer_variable_name — JS variable name (default: dataLayer)
@@ -46,6 +49,15 @@ class CRM_Datalayer_Form_Admin_GlobalSettings extends CRM_Core_Form {
     $this->add('checkbox', 'datalayer_track_begin_checkout', E::ts('Push civicrm_begin_checkout events'));
     $this->add('checkbox', 'datalayer_track_purchase', E::ts('Push civicrm_purchase events'));
     $this->add('checkbox', 'datalayer_track_registration_step', E::ts('Push civicrm_registration_step events (additional participants)'));
+
+    // ── Google Tag Manager ────────────────────────────────────────────────
+    $this->add('text', 'datalayer_gtm_id', E::ts('GTM Container ID'), [
+      'class'       => 'crm-form-text',
+      'maxlength'   => '20',
+      'size'        => '20',
+      'placeholder' => 'GTM-XXXXXXX',
+    ]);
+    $this->addRule('datalayer_gtm_id', E::ts('Must be a valid GTM container ID (e.g. GTM-XXXXXXX).'), 'regex', '/^(GTM-[A-Z0-9]+)?$/i');
 
     // ── Behavior ──────────────────────────────────────────────────────────
     $this->add('checkbox', 'datalayer_exclude_test', E::ts('Exclude test transactions from all pushes'));
@@ -85,6 +97,12 @@ class CRM_Datalayer_Form_Admin_GlobalSettings extends CRM_Core_Form {
       $varName = 'dataLayer';
     }
     Civi::settings()->set('datalayer_variable_name', $varName);
+
+    $gtmId = strtoupper(trim($values['datalayer_gtm_id'] ?? ''));
+    if ($gtmId && !preg_match('/^GTM-[A-Z0-9]+$/', $gtmId)) {
+      $gtmId = '';
+    }
+    Civi::settings()->set('datalayer_gtm_id', $gtmId);
 
     CRM_Core_Session::setStatus(
       E::ts('DataLayer global settings saved.'),
