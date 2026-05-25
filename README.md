@@ -23,6 +23,10 @@ A CiviCRM extension that pushes GA4-compatible `dataLayer` events at every step 
 
 ---
 
+![Screenshot](/images/datalayer_settings.png.png)
+
+---
+
 ## Events Pushed
 
 | CiviCRM Step | GA4 Event |
