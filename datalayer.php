@@ -262,17 +262,32 @@ function datalayer_civicrm_buildForm(string $formName, &$form): void {
     // ── Event: purchase on thank-you page ──────────────────────────────
     case 'CRM_Event_Form_Registration_ThankYou':
       try {
-        $helper = new CRM_Datalayer_Helper_Event();
-        $payload = $helper->getPurchaseData($form);
-        if ($payload !== NULL) {
-          CRM_Datalayer_Helper_Push::injectPush($payload);
+        global $payloadThanksYou;
+        if ($payloadThanksYou !== NULL) {
+          CRM_Datalayer_Helper_Push::injectPush($payloadThanksYou);
         }
       }
       catch (Exception $e) {
         Civi::log()->warning('DataLayer Registration_ThankYou buildForm: ' . $e->getMessage());
       }
       break;
-
+  }
+}
+function datalayer_civicrm_preProcess(string $formName, CRM_Core_Form &$form) {
+  switch ($formName) {
+    // ── Event: funnel metadata on Thank you step ────────────────────
+    case 'CRM_Event_Form_Registration_ThankYou':
+      try {
+        // calling from preProcess instead of buildform hook, because
+        // controller get reset in quickform function of thankyou page, so we need to set funnel data in global variable before that.
+        global $payloadThanksYou;
+        $helper = new CRM_Datalayer_Helper_Event();
+        $payloadThanksYou = $helper->getPurchaseData($form);
+      }
+      catch (Exception $e) {
+        Civi::log()->warning('DataLayer Registration_Register preProcess: ' . $e->getMessage());
+      }
+      break;
   }
 }
 
@@ -285,7 +300,6 @@ function datalayer_civicrm_buildForm(string $formName, &$form): void {
  */
 function datalayer_civicrm_postProcess(string $formName, CRM_Core_Form &$form) {
   switch ($formName) {
-
     case 'CRM_Contribute_Form_Contribution_Confirm':
       if ($form->getContributionID()) {
         $session = CRM_Core_Session::singleton();
@@ -327,6 +341,5 @@ function datalayer_civicrm_postProcess(string $formName, CRM_Core_Form &$form) {
         Civi::log()->warning('DataLayer Registration_Register postProcess: ' . $e->getMessage());
       }
       break;
-
   }
 }

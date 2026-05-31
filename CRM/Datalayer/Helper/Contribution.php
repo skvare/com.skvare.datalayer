@@ -29,7 +29,7 @@ class CRM_Datalayer_Helper_Contribution {
    */
   public function getViewItemData(CRM_Core_Form $form): ?array {
     $pageId = (int) ($form->_id ?? 0);
-    $isTest = !empty($form->_is_test);
+    $isTest = $form->_action & CRM_Core_Action::PREVIEW ? TRUE : FALSE;
 
     if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('contribution', $pageId, 'track_view_item', $isTest)) {
       return NULL;
@@ -51,6 +51,7 @@ class CRM_Datalayer_Helper_Contribution {
         'frequency_unit' => NULL,  // not yet known on view
         'frequency_interval' => NULL,
         'installments' => NULL,
+        'is_pay_later' => FALSE,
         'is_test' => $isTest,
         'funnel' => [
           'flow_type' => 'contribution',
@@ -58,9 +59,6 @@ class CRM_Datalayer_Helper_Contribution {
           'step_number' => 1,
           'total_steps' => $isConfirmEnabled ? 3 : 2,
           'has_confirm_page' => $isConfirmEnabled,
-          'is_multiple_registrations' => NULL,
-          'participant_number' => NULL,
-          'additional_participant_count' => NULL,
         ],
       ],
     ];
@@ -76,7 +74,7 @@ class CRM_Datalayer_Helper_Contribution {
    */
   public function getBeginCheckoutDataFromPost(CRM_Core_Form $form): ?array {
     $pageId = (int) ($form->_id ?? 0);
-    $isTest = !empty($form->_is_test);
+    $isTest = $form->_action & CRM_Core_Action::PREVIEW ? TRUE : FALSE;
 
     if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('contribution', $pageId, 'track_begin_checkout', $isTest)) {
       return NULL;
@@ -99,6 +97,7 @@ class CRM_Datalayer_Helper_Contribution {
         'frequency_unit' => $freqUnit,
         'frequency_interval' => $freqInterval,
         'installments' => $installments,
+        'is_pay_later' => !empty($form->getSubmittedValue('is_pay_later')),
         'is_test' => $isTest,
         'funnel' => [
           'flow_type' => 'contribution',
@@ -106,9 +105,6 @@ class CRM_Datalayer_Helper_Contribution {
           'step_number' => 1,
           'total_steps' => 2,
           'has_confirm_page' => FALSE,
-          'is_multiple_registrations' => NULL,
-          'participant_number' => NULL,
-          'additional_participant_count' => NULL,
         ],
       ],
     ];
@@ -124,7 +120,7 @@ class CRM_Datalayer_Helper_Contribution {
    */
   public function getBeginCheckoutDataFromForm(CRM_Core_Form $form): ?array {
     $pageId = (int) ($form->_id ?? 0);
-    $isTest = !empty($form->_is_test);
+    $isTest = $form->_action & CRM_Core_Action::PREVIEW ? TRUE : FALSE;
 
     if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('contribution', $pageId, 'track_begin_checkout', $isTest)) {
       return NULL;
@@ -133,7 +129,6 @@ class CRM_Datalayer_Helper_Contribution {
     $v = $form->_values ?? [];
     $p = $form->_params ?? [];
     $campaignId = !empty($v['campaign_id']) ? (int) $v['campaign_id'] : NULL;
-
     [$freqUnit, $freqInterval, $installments] = $this->recurringFromParams($p);
 
     return [
@@ -148,6 +143,7 @@ class CRM_Datalayer_Helper_Contribution {
         'frequency_unit' => $freqUnit,
         'frequency_interval' => $freqInterval,
         'installments' => $installments,
+        'is_pay_later' => !empty($p['is_pay_later']),
         'is_test' => $isTest,
         'funnel' => [
           'flow_type' => 'contribution',
@@ -155,9 +151,6 @@ class CRM_Datalayer_Helper_Contribution {
           'step_number' => 2,
           'total_steps' => 3,
           'has_confirm_page' => TRUE,
-          'is_multiple_registrations' => NULL,
-          'participant_number' => NULL,
-          'additional_participant_count' => NULL,
         ],
       ],
     ];
@@ -175,7 +168,7 @@ class CRM_Datalayer_Helper_Contribution {
   public function getPurchaseData(CRM_Core_Form $form): ?array {
     $pageId = (int) ($form->_id ?? 0);
     // Preliminary is_test check; will be re-verified from DB record.
-    $isTest = !empty($form->_is_test);
+    $isTest = $form->_action & CRM_Core_Action::PREVIEW ? TRUE : FALSE;
 
     if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('contribution', $pageId, 'track_purchase', $isTest)) {
       return NULL;
@@ -188,7 +181,6 @@ class CRM_Datalayer_Helper_Contribution {
 
     // update based on user selection
     $params = $form->getVar('_params');
-
     if (!empty($params)) {
       $amount = $form->getVar('_amount');
       if (!empty($params['amount'])) {
@@ -203,6 +195,7 @@ class CRM_Datalayer_Helper_Contribution {
     elseif ($form->getVar('_trxnId')) {
       $contribution = $this->fetchContributionWithTrnx($form->getVar('_trxnId'));
     }
+
     // Re-verify is_test from authoritative DB record
     $isTestDb = !empty($contribution['is_test']);
     if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('contribution', $pageId, 'track_purchase', $isTestDb)) {
@@ -213,11 +206,10 @@ class CRM_Datalayer_Helper_Contribution {
     $totalSteps = $isConfirmEnabled ? 3 : 2;
     $campaignId = !empty($contribution['campaign_id']) ? (int) $contribution['campaign_id'] : NULL;
 
-    // Recurring from authoritative contribution record (not from $form->_params)
-    $isRecur = !empty($contribution['contribution_recur_id']);
-    $freqUnit = $isRecur ? ($contribution['frequency_unit'] ?? NULL) : NULL;
-    $freqInterval = $isRecur ? ((int) ($contribution['frequency_interval'] ?? 0) ?: NULL) : NULL;
-    $installments = $isRecur ? ((int) ($contribution['installments'] ?? 0) ?: NULL) : NULL;
+    $p = $params ?? [];
+    $campaignId = !empty($v['campaign_id']) ? (int) $v['campaign_id'] : NULL;
+
+    [$freqUnit, $freqInterval, $installments] = $this->recurringFromParams($p);
 
     $lineItems = CRM_Datalayer_Helper_Push::getLineItems($contributionId);
     $totalAmount = (float) ($contribution['total_amount'] ?? 0);
@@ -235,6 +227,7 @@ class CRM_Datalayer_Helper_Contribution {
         'frequency_unit' => $freqUnit,
         'frequency_interval' => $freqInterval,
         'installments' => $installments,
+        'is_pay_later' => !empty($contribution['is_pay_later']),
         'is_test' => $isTestDb,
         'funnel' => [
           'flow_type' => 'contribution',
@@ -242,9 +235,6 @@ class CRM_Datalayer_Helper_Contribution {
           'step_number' => $totalSteps,
           'total_steps' => $totalSteps,
           'has_confirm_page' => $isConfirmEnabled,
-          'is_multiple_registrations' => NULL,
-          'participant_number' => NULL,
-          'additional_participant_count' => NULL,
         ],
         'ecommerce' => [
           'currency' => $currency,

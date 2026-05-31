@@ -48,8 +48,10 @@ class CRM_Datalayer_Helper_Event {
   public function getInfoPageViewData($page): ?array {
     $event = $this->resolveEventFromPage($page);
     $eventId = (int) ($event['id'] ?? 0);
+    $action = CRM_Utils_Request::retrieve('action', 'Alphanumeric', CRM_Core_DAO::$_nullObject, FALSE, CRM_Core_Action::ADD);
+    $isTest = $action & CRM_Core_Action::PREVIEW ? TRUE : FALSE;
 
-    if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('event_info', $eventId, 'track_view_item', FALSE)) {
+    if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('event_info', $eventId, 'track_view_item', $isTest)) {
       return NULL;
     }
 
@@ -64,7 +66,8 @@ class CRM_Datalayer_Helper_Event {
         'event_type' => CRM_Datalayer_Helper_Push::getEventTypeLabel((int) ($event['event_type_id'] ?? 0)),
         'campaign_id' => $campaignId,
         'campaign_title' => $campaignId ? CRM_Datalayer_Helper_Push::getCampaignTitle($campaignId) : NULL,
-        'is_test' => !empty($event['is_test']),
+        'is_pay_later' => NULL,
+        'is_test' => $isTest,
         'funnel' => [
           'flow_type' => 'event_info',
           'step_name' => 'info_page',
@@ -90,7 +93,7 @@ class CRM_Datalayer_Helper_Event {
   public function getRegisterViewData(CRM_Core_Form $form): ?array {
     $event = $form->_values['event'] ?? [];
     $eventId = (int) ($event['id'] ?? 0);
-    $isTest = !empty($form->_is_test);
+    $isTest = $form->_action & CRM_Core_Action::PREVIEW ? TRUE : FALSE;
 
     if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('event', $eventId, 'track_view_item', $isTest)) {
       return NULL;
@@ -100,8 +103,7 @@ class CRM_Datalayer_Helper_Event {
 
     // Entry point detection (Register step only, per spec)
     $referrer = $_SERVER['HTTP_REFERER'] ?? '';
-    $entryPoint = (strpos($referrer, 'civicrm/event/info') !== FALSE) ? 'info_page' : 'direct';
-
+    $entryPoint = (str_contains($referrer, 'civicrm/event/info') !== FALSE) ? 'info_page' : 'direct';
     return [
       'event' => 'civicrm_view_item',
       'civicrm' => [
@@ -112,15 +114,16 @@ class CRM_Datalayer_Helper_Event {
         'campaign_id' => $campaignId,
         'campaign_title' => $campaignId ? CRM_Datalayer_Helper_Push::getCampaignTitle($campaignId) : NULL,
         'entry_point' => $entryPoint,  // only on Register step
+        'is_pay_later' => FALSE,  // We can't determine until form submit
         'is_test' => $isTest,
         'funnel' => [
           'flow_type' => 'event',
           'step_name' => 'view',
           'step_number' => 1,
-          'total_steps' => NULL,  // unknown until Register is submitted
+          'total_steps' => NULL,  // can't determine until postProcess
           'has_confirm_page' => !empty($event['is_confirm_enabled']),
           'is_multiple_registrations' => !empty($event['is_multiple_registrations']),
-          'participant_number' => NULL,
+          'participant_number' => 1,
           'additional_participant_count' => NULL,
         ],
       ],
@@ -142,7 +145,7 @@ class CRM_Datalayer_Helper_Event {
   public function getBeginCheckoutDataFromPost(CRM_Core_Form $form): ?array {
     $event = $form->_values['event'] ?? [];
     $eventId = (int) ($event['id'] ?? 0);
-    $isTest = !empty($form->_is_test);
+    $isTest = $form->_action & CRM_Core_Action::PREVIEW ? TRUE : FALSE;
 
     // ── Always calculate and persist funnel metadata ──────────────────────
     $additionalCount = (int) ($form->getSubmittedValue('additional_participants') ?? 0);
@@ -201,7 +204,7 @@ class CRM_Datalayer_Helper_Event {
   public function getAdditionalParticipantData(CRM_Core_Form $form): ?array {
     $meta = $form->controller->container()[self::CONTAINER_KEY] ?? [];
     $eventId = (int) ($meta['event_id'] ?? 0);
-    $isTest = !empty($form->_is_test);
+    $isTest = $form->_action & CRM_Core_Action::PREVIEW ? TRUE : FALSE;
 
     if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('event', $eventId, 'track_registration_step', $isTest)) {
       return NULL;
@@ -213,12 +216,11 @@ class CRM_Datalayer_Helper_Event {
     // step_number = 1 (Register step) + participantNo.
     // If your installation returns 0-based values, change the formula to:
     //   $stepNumber = 1 + $participantNo + 1;
-    $participantNo = (int) CRM_Utils_Request::retrieve(
-      'participantNo', 'Integer', CRM_Core_DAO::$_nullObject, FALSE, 1
-    );
+    $participantNo = substr($form->getVar('_name'), 12);
     if ($participantNo < 1) {
       $participantNo = 1;  // guard against 0-based or missing value
     }
+
     $stepNumber = 1 + $participantNo;
 
     return [
@@ -227,6 +229,7 @@ class CRM_Datalayer_Helper_Event {
         'entity_type' => 'event',
         'event_id' => $eventId,
         'event_title' => $event['title'] ?? '',
+        'is_pay_later' => $form->get('is_pay_later') ? TRUE : FALSE,
         'is_test' => $isTest,
         'funnel' => [
           'flow_type' => 'event',
@@ -235,7 +238,7 @@ class CRM_Datalayer_Helper_Event {
           'total_steps' => $meta['total_steps'] ?? NULL,
           'has_confirm_page' => $meta['has_confirm_page'] ?? FALSE,
           'is_multiple_registrations' => $meta['is_multiple_registrations'] ?? FALSE,
-          'participant_number' => $participantNo,
+          'participant_number' => $stepNumber,
           'additional_participant_count' => $meta['additional_count'] ?? NULL,
         ],
       ],
@@ -253,7 +256,7 @@ class CRM_Datalayer_Helper_Event {
   public function getBeginCheckoutDataFromConfirm(CRM_Core_Form $form): ?array {
     $meta = $form->controller->container()[self::CONTAINER_KEY] ?? [];
     $eventId = (int) ($meta['event_id'] ?? 0);
-    $isTest = !empty($form->_is_test);
+    $isTest = $form->_action & CRM_Core_Action::PREVIEW ? TRUE : FALSE;
 
     if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('event', $eventId, 'track_begin_checkout', $isTest)) {
       return NULL;
@@ -272,6 +275,7 @@ class CRM_Datalayer_Helper_Event {
         'event_type' => CRM_Datalayer_Helper_Push::getEventTypeLabel((int) ($event['event_type_id'] ?? 0)),
         'campaign_id' => $campaignId,
         'campaign_title' => $campaignId ? CRM_Datalayer_Helper_Push::getCampaignTitle($campaignId) : NULL,
+        'is_pay_later' => $form->get('is_pay_later') ? TRUE : FALSE,
         'is_test' => $isTest,
         'funnel' => [
           'flow_type' => 'event',
@@ -280,7 +284,7 @@ class CRM_Datalayer_Helper_Event {
           'total_steps' => $totalSteps,
           'has_confirm_page' => $meta['has_confirm_page'] ?? TRUE,
           'is_multiple_registrations' => $meta['is_multiple_registrations'] ?? FALSE,
-          'participant_number' => NULL,
+          'participant_number' => $meta['additional_count'] ? ($meta['additional_count'] + 1) : 1,
           'additional_participant_count' => $meta['additional_count'] ?? NULL,
         ],
       ],
@@ -298,7 +302,7 @@ class CRM_Datalayer_Helper_Event {
   public function getPurchaseData(CRM_Core_Form $form): ?array {
     $meta = $form->controller->container()[self::CONTAINER_KEY] ?? [];
     $eventId = (int) ($meta['event_id'] ?? 0);
-    $isTest = !empty($form->_is_test);
+    $isTest = $form->_action & CRM_Core_Action::PREVIEW ? TRUE : FALSE;
 
     if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('event', $eventId, 'track_purchase', $isTest)) {
       return NULL;
@@ -306,18 +310,10 @@ class CRM_Datalayer_Helper_Event {
 
     $contributionId = (int) ($form->_values['contributionId'] ?? 0);
     $contribution = $this->fetchContribution($contributionId);
-
-    // Re-verify is_test from authoritative DB record
-    $isTestDb = !empty($contribution['is_test']);
-    if (!CRM_Datalayer_Helper_EntitySettings::shouldPush('event', $eventId, 'track_purchase', $isTestDb)) {
-      return NULL;
-    }
-
     $event = $form->_values['event'] ?? [];
     $campaignId = !empty($event['campaign_id']) ? (int) $event['campaign_id'] : NULL;
     $totalSteps = $meta['total_steps'] ?? NULL;
     $lineItems = CRM_Datalayer_Helper_Push::getLineItems($contributionId);
-
     return [
       'event' => 'civicrm_purchase',
       'civicrm' => [
@@ -327,7 +323,8 @@ class CRM_Datalayer_Helper_Event {
         'event_type' => CRM_Datalayer_Helper_Push::getEventTypeLabel((int) ($event['event_type_id'] ?? 0)),
         'campaign_id' => $campaignId,
         'campaign_title' => $campaignId ? CRM_Datalayer_Helper_Push::getCampaignTitle($campaignId) : NULL,
-        'is_test' => $isTestDb,
+        'is_pay_later' => $form->get('is_pay_later') ? TRUE : FALSE,
+        'is_test' => $isTest,
         'funnel' => [
           'flow_type' => 'event',
           'step_name' => 'complete',
