@@ -294,6 +294,7 @@ class CRM_Datalayer_Helper_Contribution {
         ],
         'where' => [['id', '=', $contributionId]],
         'limit' => 1,
+        'checkPermissions' => FALSE,
       ]);
       return $result->first() ?? [];
     }
@@ -319,6 +320,7 @@ class CRM_Datalayer_Helper_Contribution {
         ],
         'where' => [['trxn_id', '=', $tranID]],
         'limit' => 1,
+        'checkPermissions' => FALSE,
       ]);
       return $result->first() ?? [];
     }

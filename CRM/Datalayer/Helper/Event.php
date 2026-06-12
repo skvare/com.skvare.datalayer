@@ -332,7 +332,7 @@ class CRM_Datalayer_Helper_Event {
           'total_steps' => $totalSteps,
           'has_confirm_page' => $meta['has_confirm_page'] ?? FALSE,
           'is_multiple_registrations' => $meta['is_multiple_registrations'] ?? FALSE,
-          'participant_number' => NULL,
+          'participant_number' => !$meta['is_multiple_registrations'] ? 1 : ($meta['additional_count'] ? ($meta['additional_count'] + 1) : 1),
           'additional_participant_count' => $meta['additional_count'] ?? NULL,
         ],
         'ecommerce' => [
@@ -371,6 +371,7 @@ class CRM_Datalayer_Helper_Event {
         ],
         'where' => [['id', '=', $eventId]],
         'limit' => 1,
+        'checkPermissions' => FALSE,
       ]);
       return $result->first() ?? [];
     }
@@ -392,6 +393,7 @@ class CRM_Datalayer_Helper_Event {
         'select' => ['id', 'total_amount', 'currency', 'is_test', 'campaign_id'],
         'where' => [['id', '=', $contributionId]],
         'limit' => 1,
+        'checkPermissions' => FALSE,
       ]);
       return $result->first() ?? [];
     }

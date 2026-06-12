@@ -115,6 +115,7 @@ height=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"></iframe></nos
         'select' => ['title'],
         'where' => [['id', '=', $campaignId]],
         'limit' => 1,
+        'checkPermissions' => FALSE,
       ]);
       self::$campaignCache[$campaignId] = $result->first()['title'] ?? NULL;
     }
@@ -145,6 +146,7 @@ height=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"></iframe></nos
           ['option_group_id:name', '=', 'event_type'],
           ['value', '=', (string) $eventTypeId],
         ],
+        'checkPermissions' => FALSE,
         'limit' => 1,
       ]);
       self::$eventTypeCache[$eventTypeId] = $result->first()['label'] ?? NULL;
@@ -174,6 +176,7 @@ height=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"></iframe></nos
         'select' => ['name'],
         'where' => [['id', '=', $financialTypeId]],
         'limit' => 1,
+        'checkPermissions' => FALSE,
       ]);
       self::$financialTypeCache[$financialTypeId] = $result->first()['name'] ?? NULL;
     }
@@ -199,6 +202,7 @@ height=\"0\" width=\"0\" style=\"display:none;visibility:hidden\"></iframe></nos
       $rows = civicrm_api4('LineItem', 'get', [
         'select' => ['label', 'unit_price', 'qty'],
         'where' => [['contribution_id', '=', $contributionId]],
+        'checkPermissions' => FALSE,
       ]);
       $result = [];
       foreach ($rows as $row) {
