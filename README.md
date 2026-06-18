@@ -53,6 +53,8 @@ Default settings are seeded automatically on enable (all tracking enabled, GTM s
 
 ## Configuration
 
+For a step-by-step walkthrough of setting up Google Tag Manager and GA4, see: [CiviCRM DataLayer Extension: Google Tag Manager and GA4 Configuration](https://www.skvare.com/blog/civicrm-datalayer-extension-google-tag-manager-and-ga4-configuration)
+
 ### Global Settings
 
 Navigate to **Administer > System Settings > DataLayer Settings**.
